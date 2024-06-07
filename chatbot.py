@@ -5,15 +5,8 @@ import gc
 import torch
 from transformers import BitsAndBytesConfig
 import yaml
-import pandas as pd
 
 import utils.formation_dataset as formation_dataset
-
-print("CUDA version used is : " + torch.version.cuda)
-print("Total GPU memory is : " + str(torch.cuda.get_device_properties(0).total_memory / 1024**3) + " GB")
-print("Total GPU memory used is : " + str(torch.cuda.memory_allocated(0) / 1024**3) + " GB")
-print("Total GPU memory cached is : " + str(torch.cuda.memory_reserved(0) / 1024**3) + " GB")
-print("Total GPU memory free is : " + str((torch.cuda.get_device_properties(0).total_memory - torch.cuda.memory_allocated(0)) / 1024**3) + " GB")
 
 config = yaml.safe_load(open("config.yaml"))
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -56,11 +49,11 @@ def gen_response(input_text, model, tokenizer):
     with torch.no_grad():
         output = model.generate(
             input_ids,
-            max_length=1024 + len(input_text),
+            max_length= 256 + len(input_text),
             pad_token_id=tokenizer.eos_token_id,
             do_sample=True,
             no_repeat_ngram_size=2,  # Prevent repetition of 2-grams
-            temperature=0.7,         # Control the creativity of the model
+            temperature=0.2,         # Control the creativity of the model
             top_k=50,                # Top-k sampling
             top_p=0.9               # Nucleus sampling
         )
@@ -75,9 +68,14 @@ def find_best_schools(sentence, model, tokenizer):
         print("Aucune formation correspondant à votre demande.")
 
     else:
-        formations = sorted_formations.head(10)
-        input_text = "Donne la liste de ces formations :"
+        formations = sorted_formations.head(5)
+        input_text = "[UTILISATEUR] Donne moi la liste des formations suivantes : \n"
+        index_flemme = 1
         for index, formation in formations.iterrows():
-            input_text += f"\n- {formation['name']} : {formation['description']}"
+            input_text += f" - {index_flemme} : {formation['description']}\n"
+            index_flemme += 1
 
-        return gen_response(input_text, model, tokenizer)
+    input_text += "\n[ASSISTANT] : "
+
+
+    return gen_response(input_text, model, tokenizer)
