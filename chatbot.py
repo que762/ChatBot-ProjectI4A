@@ -5,8 +5,9 @@ import gc
 import torch
 from transformers import BitsAndBytesConfig
 import yaml
+import pandas as pd
 
-import utils.formation_dataset as fd
+import utils.formation_dataset as formation_dataset
 
 print("CUDA version used is : " + torch.version.cuda)
 print("Total GPU memory is : " + str(torch.cuda.get_device_properties(0).total_memory / 1024**3) + " GB")
@@ -15,6 +16,7 @@ print("Total GPU memory cached is : " + str(torch.cuda.memory_reserved(0) / 1024
 print("Total GPU memory free is : " + str((torch.cuda.get_device_properties(0).total_memory - torch.cuda.memory_allocated(0)) / 1024**3) + " GB")
 
 config = yaml.safe_load(open("config.yaml"))
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def load_model():
     # Conf
@@ -47,3 +49,35 @@ def load_model():
 )
 
     return model, tokenizer
+
+def gen_response(input_text, model, tokenizer):
+    input_ids = tokenizer.encode(input_text, return_tensors="pt").to(device)
+
+    with torch.no_grad():
+        output = model.generate(
+            input_ids,
+            max_length=1024 + len(input_text),
+            pad_token_id=tokenizer.eos_token_id,
+            do_sample=True,
+            no_repeat_ngram_size=2,  # Prevent repetition of 2-grams
+            temperature=0.7,         # Control the creativity of the model
+            top_k=50,                # Top-k sampling
+            top_p=0.9               # Nucleus sampling
+        )
+
+    return tokenizer.decode(output[0], skip_special_tokens=True)
+
+def find_best_schools(sentence, model, tokenizer):
+    similarities = formation_dataset.compare_to_each_row(sentence)
+    sorted_formations = formation_dataset.sort_by_most_similar(similarities)
+
+    if sorted_formations is None:
+        print("Aucune formation correspondant à votre demande.")
+
+    else:
+        formations = sorted_formations.head(10)
+        input_text = "Donne la liste de ces formations :"
+        for index, formation in formations.iterrows():
+            input_text += f"\n- {formation['name']} : {formation['description']}"
+
+        return gen_response(input_text, model, tokenizer)
