@@ -2,16 +2,14 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
-formations_dataset = pd.read_csv('utils/formations_description.csv')
+formations_dataset = pd.read_csv('datasets/formations_description.csv')
 formations_dataset.drop_duplicates(subset=['description'], inplace=True)
-print("Loading model...")
+print("Loading dataset model...")
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-print("Model loaded")
+print("Dataset model loaded")
 print("Loading embeddings...")
-embeddings = pd.read_csv('utils/formations_embeddings.csv').values
+embeddings = pd.read_csv('datasets/formations_embeddings.csv').values
 print("Embeddings loaded")
-print(embeddings)
-
 
 def compare_to_each_row(sentence):
     """Compare a sentence to each sentence in the dataset and return the similarities."""
