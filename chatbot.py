@@ -2,6 +2,7 @@ import torch
 import yaml
 
 import utils.formation_dataset as formation_dataset
+import utils.fetch_parcoursup as fetch_parcoursup
 import vigogne
 
 config = yaml.safe_load(open("config.yaml"))
@@ -26,3 +27,13 @@ def find_best_schools(sentence):
             id_f += 1
 
         return vigogne.chat(input_text, context=context)
+    
+def get_school_info(input_text, formation_list, index):
+    url = formation_list.iloc[index]["url"]
+
+    context = fetch_parcoursup.fetch_parcourSup(url)
+
+    if context is None:
+        input_text = "Tu n'as pu trouver aucune information sur la formation. Peux-tu me donner plus de détails sur la formation avec ta base de connaissances ?"
+    
+    return vigogne.chat(input_text, context=context)
