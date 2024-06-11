@@ -26,10 +26,9 @@ def find_best_schools(sentence):
             context += f" - {id_f} : {formation['description']}\n"
             id_f += 1
 
-        return vigogne.chat(input_text, context=context)
+        return vigogne.chat(input_text, context=context), formations
     
-def get_school_info(input_text, formation_list, index):
-    url = formation_list.iloc[index]["url"]
+def get_school_info(input_text, url):
 
     context = fetch_parcoursup.fetch_parcourSup(url)
 

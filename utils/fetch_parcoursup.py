@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 
 # URL de la page web
-url = "https://dossierappel.parcoursup.fr/Candidats/public/fiches/afficherFicheFormation?g_ta_cod=479"
+# url = "https://dossierappel.parcoursup.fr/Candidats/public/fiches/afficherFicheFormation?g_ta_cod=479"
 
 def call_to_url(url):
     try:
@@ -89,6 +89,6 @@ def fetch_parcourSup(url):
     return formation_info
 
 # Appel de la fonction fetch_parcourSup
-formation_info = fetch_parcourSup(url)
-if formation_info:
-    print(formation_info)
+# formation_info = fetch_parcourSup(url)
+# if formation_info:
+#    print(formation_info)
