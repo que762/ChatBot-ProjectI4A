@@ -1,14 +1,21 @@
 import torch
 import yaml
+import logging
 
 import utils.formation_dataset as formation_dataset
 import utils.fetch_parcoursup as fetch_parcoursup
 import vigogne
 
+# Config
 config = yaml.safe_load(open("config.yaml"))
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 prompt_path = config["directories"]["prompt"]
 prompt = open(prompt_path, "r").read()
+
+# Logging
+logger = logging.getLogger(__name__)
+logger.setLevel(config["log_level"])
+
 
 def find_best_schools(sentence):
     similarities = formation_dataset.compare_to_each_row(sentence)
@@ -16,11 +23,15 @@ def find_best_schools(sentence):
 
     if sorted_formations is None:
         return "Désolé, je n'ai pas trouvé de formation correspondant à votre recherche."
-
+    
     else:
         formations = sorted_formations.head(5)
+
+        logger.debug("Found formations:")
+        logger.debug(formations['description'])
+
         id_f = 1
-        input_text = "Tu as trouvé les formations précédentes. Donne la liste numérotée de ces formations et détaille ce qu'elles proposent.\n"
+        input_text = "Tu as trouvé ces formations. Donne la liste numérotée de toutes ces formations et explique ce que chacune propose.\n"
         context = ""
         for index, formation in formations.iterrows():
             context += f" - {id_f} : {formation['description']}\n"
@@ -28,9 +39,9 @@ def find_best_schools(sentence):
 
         return vigogne.chat(input_text, context=context), formations
     
-def get_school_info(input_text, url):
+def get_school_info(input_text, url, description):
 
-    context = fetch_parcoursup.fetch_parcourSup(url)
+    context = description + "\n" + str(fetch_parcoursup.fetch_parcourSup(url))
 
     if context is None:
         input_text = "Tu n'as pu trouver aucune information sur la formation. Peux-tu me donner plus de détails sur la formation avec ta base de connaissances ?"

@@ -1,18 +1,19 @@
 import requests
 from bs4 import BeautifulSoup
+import logging
 
-# URL de la page web
-# url = "https://dossierappel.parcoursup.fr/Candidats/public/fiches/afficherFicheFormation?g_ta_cod=479"
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 def call_to_url(url):
     try:
         response = requests.get(url)
         response.raise_for_status()
     except requests.exceptions.HTTPError as e:
-        print(f"Erreur lors de la requête HTTP: {e}")
+        logger.error(f"Erreur lors de la requête HTTP: {e}")
         return None
     except requests.exceptions.RequestException as e:
-        print(f"Erreur lors de la requête HTTP: {e}")
+        logger.error(f"Erreur lors de la requête HTTP: {e}")
         return None
 
     return response
@@ -88,7 +89,10 @@ def fetch_parcourSup(url):
 
     return formation_info
 
-# Appel de la fonction fetch_parcourSup
-# formation_info = fetch_parcourSup(url)
-# if formation_info:
-#    print(formation_info)
+def convert_dict_to_str(formation_info):
+    text = ""
+
+    for key, value in formation_info.items():
+        text += f"{key.capitalize()} : {value}\n\n"
+
+    return text

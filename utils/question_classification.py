@@ -1,8 +1,12 @@
 from transformers import pipeline
+import logging
 
-print("Loading classification model...")
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+logging.info("Loading classification model...")
 classifier = pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
-print("Classification model loaded.")
+logging.info("Classification model loaded.\n")
 
 # Classes
 candidate_labels = ["recherche établissements", "informations établissement", "question ouverte"]

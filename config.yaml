@@ -4,3 +4,5 @@ directories:
   datasets: 'datasets'
   models: 'models'
   prompt: 'utils/prompt.txt'
+
+log_level: 'INFO'

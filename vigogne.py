@@ -4,6 +4,10 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig, 
 import os
 import gc
 import yaml
+import logging
+
+# Global variables
+prompt = ""
 
 # Define the model
 model_name_or_path = "bofenghuang/vigogne-2-7b-chat"
@@ -13,24 +17,27 @@ revision = "v2.0"
 config = yaml.safe_load(open("config.yaml"))
 cache_dir = config["directories"]["models"]
 prompt_path = config["directories"]["prompt"]
-prompt = open(prompt_path, "r").read()
 os.makedirs(cache_dir, exist_ok=True)
+
+# Logging
+logger = logging.getLogger(__name__)
+logger.setLevel(config["log_level"])
 
 # Clear the cache
 torch.cuda.empty_cache()
 gc.collect()
 
-print("Loading chatbot model...")
+logger.info("Loading chatbot model...")
 bnb_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.float16)
 tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, revision=revision, padding_side="right", cache_dir=cache_dir)
 model = AutoModelForCausalLM.from_pretrained(model_name_or_path, revision=revision, torch_dtype=torch.float16, device_map="auto", cache_dir=cache_dir, quantization_config=bnb_config)
-print("Chatbot model loaded")
+logger.info("Chatbot model loaded\n")
 
 def chat(
     query: str,
     context: Optional[str] = None,
     history: Optional[List[Dict]] = None,
-    temperature: float = 0.5,
+    temperature: float = 0.3,
     top_p: float = 1.0,
     top_k: float = 0,
     repetition_penalty: float = 1.1,
@@ -42,14 +49,16 @@ def chat(
     if history is None:
         history = []
 
+    prompt = open(prompt_path, "r").read()
+
     # Add context
     if context is not None :
         if len(context) > 0:
             prompt += "Context : \n" + context + "\n"
     
-    prompt = "Question: " + query + "\n"
+    prompt += "Question: " + query + "\n"
 
-    print("Query: ", prompt)
+    logger.debug("Prompt: " + prompt)
 
     history.append({"role": "user", "content": prompt})
 
