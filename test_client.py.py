@@ -1,49 +1,43 @@
 import socketio
-import ssl
+import urllib3
 
-# Chemin vers le certificat auto-signé
-ssl_cert_path = 'secure_connection/finalCertProject.crt'
+urllib3.disable_warnings()
 
-# Créer un contexte SSL
-ssl_context = ssl.create_default_context()
+# Créer une instance du client Socket.IO
+sio = socketio.Client(ssl_verify=False)
 
-# Charger le certificat auto-signé
-ssl_context.load_verify_locations(cafile=ssl_cert_path)
-
-# Créer un client Socket.IO en spécifiant le contexte SSL personnalisé
-sio = socketio.Client(logger=True, engineio_logger=True, ssl_verify=ssl_context)
-
-connected = False
-
+# Gestion des événements de connexion
 @sio.event
 def connect():
-    global connected
-    connected = True
-    print("Connected to the server")
+    print("Connecté au serveur")
+    sio.send("Bonjour serveur!")
 
-@sio.event
-def connect_error(data):
-    print("Failed to connect to the server")
-
+# Gestion des événements de déconnexion
 @sio.event
 def disconnect():
-    global connected
-    connected = False
-    print("Disconnected from the server")
+    print("Déconnecté du serveur")
 
+# Gestion des messages
 @sio.event
 def message(data):
-    print(f"Message from server: {data}")
-
-# Connect to the server
-sio.connect('https://192.168.226.204:5000')
-
-while True:
-    if connected:
-        message = input("Enter a message ('exit' to quit): ")
-        if message.lower() == 'exit':
+    while True :
+        print("Réponse du serveur :", data)
+        if data.lower() == "exit":
+            print("\nDéconnexion...")
             sio.disconnect()
-        sio.send(message)
+            break
+        else:
+            data = input("Votre message : ")
+            sio.emit("message", data)
 
-# Wait for messages and keep the connection alive until the user decides to exit
-sio.wait()
+
+
+if __name__ == '__main__':
+    try:
+        # Se connecter au serveur
+        sio.connect('https://asile.freeboxos.fr:44444')
+        # Attendre les événements
+        sio.wait()
+    except KeyboardInterrupt:
+        # Se déconnecter du serveur
+        sio.disconnect()
