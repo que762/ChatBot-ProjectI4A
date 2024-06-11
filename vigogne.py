@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig, TextStreamer, BitsAndBytesConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig, BitsAndBytesConfig
 import os
 import gc
 import yaml
@@ -22,7 +22,7 @@ gc.collect()
 
 print("Loading chatbot model...")
 bnb_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.float16)
-tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, revision=revision, padding_side="right", use_fast=False, cache_dir=cache_dir)
+tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, revision=revision, padding_side="right", cache_dir=cache_dir)
 model = AutoModelForCausalLM.from_pretrained(model_name_or_path, revision=revision, torch_dtype=torch.float16, device_map="auto", cache_dir=cache_dir, quantization_config=bnb_config)
 print("Chatbot model loaded")
 
@@ -47,7 +47,7 @@ def chat(
         if len(context) > 0:
             prompt += "Context : \n" + context + "\n"
     
-    prompt += "Question: " + query + "\n"
+    prompt = "Question: " + query + "\n"
 
     print("Query: ", prompt)
 
