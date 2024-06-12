@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
-import logging
 
+import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 

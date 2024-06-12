@@ -1,12 +1,16 @@
 from transformers import pipeline
+
 import logging
+import yaml
 
+# Logging
+conf = yaml.safe_load(open("config.yaml"))
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(conf["log_level"])
 
-logging.info("Loading classification model...")
+logger.info("Loading classification model...")
 classifier = pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
-logging.info("Classification model loaded.\n")
+logger.info("Classification model loaded.\n")
 
 # Classes
 candidate_labels = ["recherche établissements", "recherche écoles", "précisions", "détails", "débouchés", "question ouverte"]

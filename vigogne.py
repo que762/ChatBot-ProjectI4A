@@ -3,8 +3,8 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig, BitsAndBytesConfig
 import os
 import gc
-import yaml
 import logging
+import yaml
 
 import utils.fire_db as fire_db
 

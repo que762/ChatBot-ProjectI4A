@@ -1,6 +1,7 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO
 import logging
+import yaml
 
 import pipeline
 
@@ -11,8 +12,9 @@ server.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 socketio = SocketIO(server, cors_allowed_origins="*")
 
 # Logging
+conf = yaml.safe_load(open("config.yaml"))
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(conf["log_level"])
 
 @server.route('/')
 def index():
@@ -24,10 +26,10 @@ def connection(msg):
 
 @socketio.on('disconnection')
 def disconnect(msg):
-	print('Client disconnected')
+	logger.info('User disconnected')
 
 @socketio.on('user_message')
 def handle_message(msg):
-	print('User message:', msg)
+	logger.debug('User message: ' + msg['message'])
 	response = pipeline.educhat(msg['user_id'], msg['message'])
 	socketio.emit('ai_message', response)

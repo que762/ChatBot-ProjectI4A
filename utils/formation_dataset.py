@@ -12,14 +12,14 @@ formations_dataset.drop_duplicates(subset=['description'], inplace=True)
 formations_dataset.reset_index(drop=True, inplace=True)
 
 # Load the model
-logging.info("Loading dataset model...")
+logger.info("Loading dataset model...")
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 logger.info("Dataset model loaded\n")
 
 # Load the embeddings
 logger.info("Loading embeddings...")
 embeddings = pd.read_csv('datasets/formations_embeddings.csv').values
-logging.info("Embeddings loaded\n")
+logger.info("Embeddings loaded\n")
 
 
 def find_index_by_description(description, formations_dataset=formations_dataset):
@@ -45,8 +45,8 @@ def sort_by_most_similar(similarities, formations_dataset=formations_dataset):
     return formations_dataset.sort_values(by='similarity', ascending=False)
 
 if __name__ == "__main__":
-    similarities = compare_to_each_row("Tu me conseillerais quelle école pour devenir développeur web ? Je cherche un apprentissage")
+    similarities = compare_to_each_row("internat mixte")
     sorted_formations = sort_by_most_similar(similarities)
     # five most similar formation descriptions
     for i in range(5):
-        logger.info(sorted_formations.iloc[i]['description'])
+        print(sorted_formations.iloc[i]['description'])

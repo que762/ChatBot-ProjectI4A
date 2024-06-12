@@ -1,13 +1,11 @@
 import torch
 import logging
-import yaml
 
 import pipeline
 
 # Logging
-config = yaml.safe_load(open("config.yaml"))
 logger = logging.getLogger(__name__)
-logger.setLevel(config["log_level"])
+logger.setLevel(logging.INFO)
 
 # Startup
 logger.info("CUDA version used is : " + torch.version.cuda)

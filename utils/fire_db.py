@@ -6,8 +6,6 @@ import logging
 
 # config
 config = yaml.safe_load(open("config.yaml"))
-
-# logging
 logger = logging.getLogger(__name__)
 logger.setLevel(config["log_level"])
 
@@ -49,6 +47,9 @@ if __name__ == "__main__":
     convo = retrieve_convo('jupQXBfzgcc5IJDEQOg8wV3xhml1')
     for message in convo:
         print(message)
+
+    logger.info("test")
+    logger.debug("Adding test messages...")
 
     # add_message('jupQXBfzgcc5IJDEQOg8wV3xhml1', 'Python test')
     # add_message('jupQXBfzgcc5IJDEQOg8wV3xhml1', 'Python test 2', is_bot=True)

@@ -1,6 +1,4 @@
-import torch
 import logging
-import yaml
 
 import chatbot
 import vigogne
@@ -8,9 +6,9 @@ import utils.question_classification as classif
 import utils.formation_dataset as formation_dataset
 
 # Logging
-config = yaml.safe_load(open("config.yaml"))
+conf = open("config.yaml", "r")
 logger = logging.getLogger(__name__)
-logger.setLevel(config["log_level"])
+logger.setLevel(conf["log_level"])
 
 latest_found_schools = []
 

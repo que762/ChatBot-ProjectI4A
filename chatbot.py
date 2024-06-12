@@ -1,10 +1,10 @@
 import torch
 import yaml
-import logging
 
 import utils.formation_dataset as formation_dataset
 import utils.fetch_parcoursup as fetch_parcoursup
 import utils.fire_db as fire_db
+import utils.log_config as log_config
 import vigogne
 
 # Config
@@ -14,8 +14,7 @@ prompt_path = config["directories"]["prompt"]
 prompt = open(prompt_path, "r").read()
 
 # Logging
-logger = logging.getLogger(__name__)
-logger.setLevel(config["log_level"])
+logger = log_config.setup_logging()
 
 
 def find_best_schools(user_id, sentence):
