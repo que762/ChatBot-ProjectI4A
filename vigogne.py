@@ -6,9 +6,6 @@ import gc
 import yaml
 import logging
 
-# Global variables
-prompt = ""
-
 # Define the model
 model_name_or_path = "bofenghuang/vigogne-2-7b-chat"
 revision = "v2.0"
@@ -44,25 +41,18 @@ def chat(
     max_new_tokens: int = 1024,
     **kwargs,
 ):
-    global prompt
-
     if history is None:
         history = []
 
-    prompt = open(prompt_path, "r").read()
+    history.append({"role": "user", "content": query})
 
-    # Add context
-    if context is not None :
-        if len(context) > 0:
-            prompt += "Context : \n" + context + "\n"
-    
-    prompt += "Question: " + query + "\n"
+    input_text = get_chat_template(query, context, history[:-1])
+    print(input_text)
+    #print(history)
 
-    logger.debug("Prompt: " + prompt)
+    logger.debug("Prompt: " + input_text)
 
-    history.append({"role": "user", "content": prompt})
-
-    input_ids = tokenizer.apply_chat_template(history, add_generation_prompt=True, return_tensors="pt").to(model.device)
+    input_ids = tokenizer(input_text, return_tensors="pt").input_ids.to(model.device)
     input_length = input_ids.shape[1]
 
     generated_outputs = model.generate(
@@ -86,3 +76,25 @@ def chat(
     history.append({"role": "assistant", "content": generated_text})
 
     return generated_text, history
+
+def get_chat_template(user_prompt, context, history):    
+    with open(prompt_path, 'r') as f:
+        default_system_prompt = f.read()
+    return (f"{default_system_prompt}\n\n"
+            f"user : \n"
+            f"- History : \n {handle_chat_history(history)}\n"
+            f"- Contexte : {context}\n"
+            f"- Question : {user_prompt}\n"
+            f"assistant : \n"
+            )
+
+def handle_chat_history(history):
+    return "\n".join([f"{x['role']} : {x['content']}" for x in history])
+
+if __name__ == "__main__":
+    history = []
+    while True:
+        query = input("Query: ")
+        result, history = chat(query, history=history)
+        print("Result:")
+        print(result)

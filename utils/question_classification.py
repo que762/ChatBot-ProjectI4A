@@ -2,20 +2,22 @@ from transformers import pipeline
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 logging.info("Loading classification model...")
 classifier = pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
 logging.info("Classification model loaded.\n")
 
 # Classes
-candidate_labels = ["recherche établissements", "informations établissement", "question ouverte"]
+candidate_labels = ["recherche établissements", "recherche écoles", "précisions", "détails", "débouchés", "question ouverte"]
 
 def classify(question : str):
-    result = classifier(question, candidate_labels)["labels"][0]
+    result = classifier(question, candidate_labels)
+    logger.debug("Classification result: " + str(result))
+    result = result['labels'][0]
     if result == "recherche établissements":
         return "search_schools"
-    elif result == "informations établissement":
+    elif result == "précisions" or result == "détails" or result == "débouchés":
         return "school_info"
     else:
         return "other"

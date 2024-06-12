@@ -5,4 +5,4 @@ directories:
   models: 'models'
   prompt: 'utils/prompt.txt'
 
-log_level: 'INFO'
+log_level: 'DEBUG'
