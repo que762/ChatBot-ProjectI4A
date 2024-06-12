@@ -23,11 +23,11 @@ def connection(msg):
 	socketio.emit('ai_message', 'Bonjour, je suis Edubot, comment puis-je vous aider ?')
 
 @socketio.on('disconnection')
-def disconnect():
+def disconnect(msg):
 	print('Client disconnected')
 
 @socketio.on('user_message')
 def handle_message(msg):
 	print('User message:', msg)
-	response = pipeline.educhat(msg)
+	response = pipeline.educhat(msg['user_id'], msg['message'])
 	socketio.emit('ai_message', response)

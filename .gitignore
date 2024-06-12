@@ -5,3 +5,4 @@ utils/formations_embeddings.csv
 utils/fr-esr-cartographie_formations_parcoursup.csv
 __pycache__/
 datasets/
+parcours-creds.json

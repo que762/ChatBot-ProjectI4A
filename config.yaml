@@ -6,3 +6,5 @@ directories:
   prompt: 'utils/prompt.txt'
 
 log_level: 'DEBUG'
+
+firebase_creds: 'utils/parcours-creds.json'

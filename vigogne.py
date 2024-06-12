@@ -6,6 +6,8 @@ import gc
 import yaml
 import logging
 
+import utils.fire_db as fire_db
+
 # Define the model
 model_name_or_path = "bofenghuang/vigogne-2-7b-chat"
 revision = "v2.0"
@@ -77,6 +79,22 @@ def chat(
 
     return generated_text, history
 
+
+def chat_db(user_id, user_prompt, context = None):
+    # Add the user message to the database
+    fire_db.add_message(user_id, user_prompt)
+
+    history = fire_db.retrieve_convo(user_id)
+
+    # Chat with the model
+    result, history = chat(user_prompt, context, history)
+
+    # Add the bot message to the database
+    fire_db.add_message(user_id, result, is_bot=True)
+
+    return result, history
+
+
 def get_chat_template(user_prompt, context, history):    
     with open(prompt_path, 'r') as f:
         default_system_prompt = f.read()
@@ -88,8 +106,11 @@ def get_chat_template(user_prompt, context, history):
             f"assistant : \n"
             )
 
+
 def handle_chat_history(history):
     return "\n".join([f"{x['role']} : {x['content']}" for x in history])
+
+
 
 if __name__ == "__main__":
     history = []

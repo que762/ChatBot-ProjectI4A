@@ -4,6 +4,7 @@ import logging
 
 import utils.formation_dataset as formation_dataset
 import utils.fetch_parcoursup as fetch_parcoursup
+import utils.fire_db as fire_db
 import vigogne
 
 # Config
@@ -17,12 +18,14 @@ logger = logging.getLogger(__name__)
 logger.setLevel(config["log_level"])
 
 
-def find_best_schools(sentence):
+def find_best_schools(user_id, sentence):
     similarities = formation_dataset.compare_to_each_row(sentence)
     sorted_formations = formation_dataset.sort_by_most_similar(similarities)
 
     if sorted_formations is None:
-        return "Désolé, je n'ai pas trouvé de formation correspondant à votre recherche."
+        response = "Désolé, je n'ai pas trouvé de formation correspondant à votre recherche."
+        fire_db.add_message(user_id, response, is_bot=True)
+        return response, None
     
     else:
         formations = sorted_formations.head(5)
@@ -37,13 +40,13 @@ def find_best_schools(sentence):
             context += f" - {id_f} : {formation['description']}\n"
             id_f += 1
 
-        return vigogne.chat(input_text, context=context), formations
+        return vigogne.chat_db(user_id, input_text, context=context), formations
     
-def get_school_info(input_text, url, description):
+def get_school_info(user_id, input_text, url, description):
 
     context = description + "\n" + str(fetch_parcoursup.fetch_parcourSup(url))
 
     if context is None:
         input_text = "Tu n'as pu trouver aucune information sur la formation. Peux-tu me donner plus de détails sur la formation avec ta base de connaissances ?"
     
-    return vigogne.chat(input_text, context=context)
+    return vigogne.chat_db(user_id, input_text, context=context)

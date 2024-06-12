@@ -14,21 +14,23 @@ logger.setLevel(config["log_level"])
 
 latest_found_schools = []
 
-def educhat(input_text : str):
+def educhat(user_id, input_text : str):
     global latest_found_schools
 
     question_class = classif.classify(input_text)
     logger.debug("Detected question class: " + question_class)
 
+    # Search for schools
     if question_class == "search_schools":
-        response, formations = chatbot.find_best_schools(input_text)
+        response, formations = chatbot.find_best_schools(user_id, input_text)
         latest_found_schools = formations
         return response[0]
     
+    # Get school info
     elif question_class == "school_info":
-        # If latest question wasn't about searching schools
+        # If latest question wasn't about searching schools, fallback
         if len(latest_found_schools) == 0:
-            return vigogne.chat(input_text)[0]
+            return vigogne.chat_db(input_text)[0]
         else :
             embeddings = []
             for row in latest_found_schools.iterrows():
@@ -43,8 +45,9 @@ def educhat(input_text : str):
             else:
                 logger.debug("Most similar formation:")
                 logger.debug(sorted_formations.iloc[0]['description'], sorted_formations.iloc[0]['url'])
-                return chatbot.get_school_info(input_text, sorted_formations.iloc[0]['url'], sorted_formations.iloc[0]['description'])[0]
+                return chatbot.get_school_info(user_id, input_text, sorted_formations.iloc[0]['url'], sorted_formations.iloc[0]['description'])[0]
 
+    # Open questions
     else:
         latest_found_schools = []
-        return vigogne.chat(input_text)[0]
+        return vigogne.chat_db(user_id, input_text)[0]
