@@ -18,6 +18,16 @@ logger = log_config.setup_logging()
 
 
 def find_best_schools(user_id, sentence):
+    # Convert for better accuracy
+    prepas = ["prépa", "classes préparatoires", "classes prépa"]
+    for prepa in prepas:
+        if prepas in sentence:
+            sentence = sentence.replace(prepa, "CPGE")
+
+    if "distanciel" in sentence:
+        sentence = sentence.replace("distanciel", "à distance")
+
+
     similarities = formation_dataset.compare_to_each_row(sentence)
     sorted_formations = formation_dataset.sort_by_most_similar(similarities)
 

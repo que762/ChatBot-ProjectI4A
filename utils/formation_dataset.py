@@ -45,7 +45,7 @@ def sort_by_most_similar(similarities, formations_dataset=formations_dataset):
     return formations_dataset.sort_values(by='similarity', ascending=False)
 
 if __name__ == "__main__":
-    similarities = compare_to_each_row("internat mixte")
+    similarities = compare_to_each_row("CPGE Doubs")
     sorted_formations = sort_by_most_similar(similarities)
     # five most similar formation descriptions
     for i in range(5):
