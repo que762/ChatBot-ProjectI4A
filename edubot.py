@@ -6,6 +6,10 @@ import gc
 import logging
 import yaml
 
+import concurrent.futures
+import asyncio
+executor = concurrent.futures.ThreadPoolExecutor()
+
 import utils.fire_db as fire_db
 
 # Define the model
@@ -80,19 +84,26 @@ def chat(
     return generated_text, history
 
 
-def chat_db(user_id, user_prompt, context = None):
-    history = fire_db.retrieve_convo(user_id)
+async def chat_db(user_id, user_prompt, context=None):
+    loop = asyncio.get_event_loop()
+    try:
+        # Retrieve conversation history
+        history = await loop.run_in_executor(executor, fire_db.retrieve_convo, user_id)
 
-    # Chat with the model
-    result, history = chat(user_prompt, context, history)
+        # Chat with the model
+        result, history = await loop.run_in_executor(executor, chat, user_prompt, context, history)
 
-    # Add the user message to the database
-    fire_db.add_message(user_id, user_prompt)
+        # Add the user message to the database
+        await loop.run_in_executor(executor, fire_db.add_message, user_id, user_prompt)
 
-    # Add the bot message to the database
-    fire_db.add_message(user_id, result, is_bot=True)
+        # Add the bot message to the database
+        await loop.run_in_executor(executor, fire_db.add_message, user_id, result, True)
 
-    return result, history
+        return result, history
+    except Exception as e:
+        logger.error(f"Error during chat_db operation: {e}")
+        return None, None
+    
 
 
 def get_chat_template(user_prompt, context, history):    
