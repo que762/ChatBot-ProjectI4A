@@ -1,7 +1,6 @@
 import pika
 import json
 from time import sleep
-from exceptions import *
 
 # TODO: a mettre dans les var d'env
 QUEUE_INPUT = 'messages_users'
@@ -20,7 +19,7 @@ def get_rabbitmq_handle(connection_string, max_retries=3):
             sleep(5)
             return get_rabbitmq_handle(connection_string, max_retries - 1)
         else:
-            raise MaxAttemptsExceededError('Nombre maximal de tentatives de connexion atteint')
+            raise pika.exceptions.AMQPConnectionError('Nombre maximal de tentatives de connexion atteint')
 
 def close_rabbitmq_handle(channel, connection, max_retries=3):
     try:
@@ -33,7 +32,7 @@ def close_rabbitmq_handle(channel, connection, max_retries=3):
             sleep(5)
             close_rabbitmq_handle(channel, connection, max_retries - 1)
         else:
-            raise MaxAttemptsExceededError('Nombre maximal de tentatives de connexion atteint')
+            raise Exception('Nombre maximal de tentatives de fermeture de connexion atteint')
 
 class RabbitMQHandler:
 
@@ -41,7 +40,7 @@ class RabbitMQHandler:
         self.queue_in = None
         try:
             self.channel, self.connexion = get_rabbitmq_handle(CONNEXION_URI)
-        except MaxAttemptsExceededError as e:
+        except pika.exceptions.AMQPConnectionError as e:
             print(e)
             print("Pour augmenter le nombre de tentatives, modifier la valeur de max_retries dans le code")
             exit(1)
@@ -69,7 +68,24 @@ class RabbitMQHandler:
             if max_retries > 0:
                 sleep(5)
                 return self.get_last_request(queue_name, max_retries - 1)
-            raise MessageReceptionError(f'Erreur lors de la réception du message: {e}')
+            raise Exception('Nombre maximal de tentatives de réception atteint')
+        
+    def get_all_messages(self, queue_name, max_retries=3):
+        try:
+            messages = []
+            method_frame, header_frame, body_bytes = self.channel.basic_get(queue=queue_name, auto_ack=True)
+            while method_frame:
+                body = json.loads(body_bytes.decode('utf-8'))
+                messages.append(body)
+                print(" [<] Message received: ", body)
+                method_frame, header_frame, body_bytes = self.channel.basic_get(queue=queue_name, auto_ack=True)
+            return messages
+        except Exception as e:
+            print('Erreur lors de la réception du message: ', str(e))
+            if max_retries > 0:
+                sleep(5)
+                return self.get_all_messages(queue_name, max_retries - 1)
+            raise Exception('Nombre maximal de tentatives de réception atteint')
 
     def send_result(self, body: dict, queue_name, max_retries=3):
         try:
