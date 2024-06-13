@@ -5,6 +5,7 @@ import edubot
 import utils.question_classification as classif
 import utils.formation_dataset as formation_dataset
 import utils.fetch_parcoursup as fetch_parcoursup
+import utils.mongo as mongo
 
 # Logging
 conf = yaml.safe_load(open("config.yaml"))
@@ -18,12 +19,15 @@ def educhat(user_id, input_text: str):
     global latest_found_schools
 
     question_class = classif.classify(input_text)
-    logger.debug("Detected question class: " + question_class)
+    print("Detected question class: " + question_class)
 
     # Search for schools
     if question_class == "search_schools":
         response, formations = find_best_schools(user_id, input_text)
-        latest_found_schools = formations
+        if formations is not None:
+            latest_found_schools = formations
+        else:
+            latest_found_schools = []
         return response[0]
 
     # Get school info
@@ -58,18 +62,19 @@ def find_best_schools(user_id, sentence):
     # Convert for better accuracy
     prepas = ["prépa", "classes préparatoires", "classes prépa"]
     for prepa in prepas:
-        if prepas in sentence:
+        if sentence.find(prepa) != -1:
             sentence = sentence.replace(prepa, "CPGE")
 
-    if "distanciel" in sentence:
+    if sentence.find("distanciel") != -1:
         sentence = sentence.replace("distanciel", "à distance")
+
+    print("Sentence: " + sentence)
 
     similarities = formation_dataset.compare_to_each_row(sentence)
     sorted_formations = formation_dataset.sort_by_most_similar(similarities)
 
     if sorted_formations is None:
-        response = "Désolé, je n'ai pas trouvé de formation correspondant à votre recherche."
-        return response, None
+        return edubot.chat_db(user_id, sentence), None
 
     else:
         formations = sorted_formations.head(5)
@@ -78,7 +83,7 @@ def find_best_schools(user_id, sentence):
         logger.debug(formations['description'])
 
         id_f = 1
-        input_text = ("Tu as trouvé ces formations. Donne la liste numérotée de toutes ces formations et explique ce "
+        input_text = ("Liste les formations que tu viens de trouver et explique en détail ce "
                       "que chacune propose.\n")
         context = ""
         for index, formation in formations.iterrows():
@@ -89,10 +94,23 @@ def find_best_schools(user_id, sentence):
 
 
 def get_school_info(user_id, input_text, url, description):
-    context = description + "\n" + str(fetch_parcoursup.fetch_parcourSup(url))
+    try :
+        context = description + "\n" + str(fetch_parcoursup.fetch_parcourSup(url))
+        context += "\n Pour plus d'informations, lien vers la fiche de formation: " + url
+    except:
+        context = None
 
     if context is None:
         input_text = ("Tu n'as pu trouver aucune information sur la formation. Peux-tu me donner plus de détails sur "
                       "la formation avec ta base de connaissances ?")
 
     return edubot.chat_db(user_id, input_text, context=context)
+
+
+if __name__ == "__main__":
+    user_id = "1234"
+    mongo.clear_db()
+    while True:
+        user_input = input("User: ")
+        response = educhat(user_id, user_input)
+        print("Bot: " + response)

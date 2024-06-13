@@ -4,28 +4,31 @@ import logging
 import yaml
 
 # Logging
-conf = yaml.safe_load(open("config.yaml"))
 logger = logging.getLogger(__name__)
-logger.setLevel(conf["log_level"])
+logger.setLevel(logging.DEBUG)
 
 logger.info("Loading classification model...")
 classifier = pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
 logger.info("Classification model loaded.\n")
 
 # Classes
-candidate_labels = ["recherche établissements", "recherche écoles", "précisions", "détails", "débouchés", "question ouverte"]
+candidate_labels = ["recherche établissements", "lister écoles", "précisions", "détails", "débouchés",
+                    "question ouverte"]
 
-def classify(question : str):
+
+def classify(question: str):
     result = classifier(question, candidate_labels)
-    logger.debug("Classification result: " + str(result))
+    print("Classification result: " + str(result))
     result = result['labels'][0]
-    if result == "recherche établissements":
+    if result == "recherche établissements" or result == "lister écoles":
         return "search_schools"
     elif result == "précisions" or result == "détails" or result == "débouchés":
         return "school_info"
     else:
         return "other"
 
+
 if __name__ == "__main__":
-    question = input("Question: ")
-    print(classify(question))
+    while True:
+        question = input("Question: ")
+        print(classify(question))

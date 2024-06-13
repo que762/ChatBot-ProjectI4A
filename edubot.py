@@ -6,7 +6,7 @@ import gc
 import logging
 import yaml
 
-from utils.mongo import retrieve_convo, insert_message
+from utils.mongo import retrieve_convo, clear_convo
 
 # Define the model
 model_name_or_path = "bofenghuang/vigogne-2-7b-chat"
@@ -39,7 +39,7 @@ def chat(
         query: str,
         context: Optional[str] = None,
         history: Optional[List[Dict]] = None,
-        temperature: float = 0.3,
+        temperature: float = 0.5,
         top_p: float = 1.0,
         top_k: float = 0,
         repetition_penalty: float = 1.1,
@@ -53,7 +53,7 @@ def chat(
 
     input_text = get_chat_template(query, context, history[:-1])
 
-    logger.debug("Prompt: " + input_text)
+    print("Prompt: " + input_text)
 
     input_ids = tokenizer(input_text, return_tensors="pt").input_ids.to(model.device)
     input_length = input_ids.shape[1]
@@ -89,10 +89,6 @@ def chat_db(user_id, user_prompt, context=None):
         # Chat with the model
         result, history = chat(user_prompt, context, history)
 
-        # Add the user and bot messages to the database
-        insert_message(user_prompt, user_id, is_bot=False)
-        insert_message(result, user_id, is_bot=True)
-
         return result, history
     except Exception as e:
         logger.error(f"Error during chat_db operation: {e}")
@@ -102,11 +98,12 @@ def get_chat_template(user_prompt, context, history):
     with open(prompt_path, 'r') as f:
         default_system_prompt = f.read()
     return (f"{default_system_prompt}\n\n"
-            f"user : \n"
+            f"system : \n"
             f"- History : \n {handle_chat_history(history)}\n"
             f"- Contexte : {context}\n"
+            f"\nuser : \n"
             f"- Question : {user_prompt}\n"
-            f"assistant : \n"
+            f"\nassistant : \n"
             )
 
 
@@ -115,9 +112,9 @@ def handle_chat_history(history):
 
 
 if __name__ == "__main__":
-    history = []
+    clear_convo("123")
     while True:
         query = input("Query: ")
-        result, history = chat(query, history=history)
+        result, _ = chat_db("123", query)
         print("Result:")
         print(result)

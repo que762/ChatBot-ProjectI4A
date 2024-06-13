@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_socketio import SocketIO
 import logging
 import yaml
@@ -8,8 +8,6 @@ import utils.mongo as mongo
 
 server = Flask(__name__)
 server.config['SECRET_KEY'] = 'edubotkey'
-# no timeout
-server.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 socketio = SocketIO(server, cors_allowed_origins="*")
 
 # Logging
@@ -25,7 +23,8 @@ def index():
 
 @socketio.on('connection')
 def connection(msg):
-    socketio.emit('ai_message', 'Bonjour, je suis Edubot, comment puis-je vous aider ?')
+    socket_id = request.sid
+    socketio.emit('ai_message', 'Bonjour, je suis StudyMate, comment puis-je vous aider ?', to=socket_id)
 
 
 @socketio.on('disconnection')
@@ -38,12 +37,13 @@ def handle_message(msg):
     logger.debug('User message: ' + msg['message'])
     user_id = msg['user_id']
     user_message = msg['message']
+    socket_id = request.sid
 
     response = pipeline.educhat(user_id, user_message)
 
     # Save the conversation
-    mongo.insert_message(user_id, user_message, is_bot=False)
-    mongo.insert_message(user_id, response, is_bot=True)
+    mongo.insert_message(user_message, user_id, is_bot=False)
+    mongo.insert_message(response, user_id, is_bot=True)
 
     # Send the response to the user
-    socketio.emit('ai_message', response)
+    socketio.emit('ai_message', response, to=socket_id)
