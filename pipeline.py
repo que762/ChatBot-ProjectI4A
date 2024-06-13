@@ -1,12 +1,13 @@
 import logging
+import yaml
 
 import chatbot
-import vigogne
+import edubot
 import utils.question_classification as classif
 import utils.formation_dataset as formation_dataset
 
 # Logging
-conf = open("config.yaml", "r")
+conf = yaml.safe_load(open("config.yaml"))
 logger = logging.getLogger(__name__)
 logger.setLevel(conf["log_level"])
 
@@ -28,7 +29,7 @@ def educhat(user_id, input_text : str):
     elif question_class == "school_info":
         # If latest question wasn't about searching schools, fallback
         if len(latest_found_schools) == 0:
-            return vigogne.chat_db(input_text)[0]
+            return edubot.chat_db(user_id, input_text)[0]
         else :
             embeddings = []
             for row in latest_found_schools.iterrows():
@@ -48,4 +49,4 @@ def educhat(user_id, input_text : str):
     # Open questions
     else:
         latest_found_schools = []
-        return vigogne.chat_db(user_id, input_text)[0]
+        return edubot.chat_db(user_id, input_text)[0]

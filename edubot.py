@@ -81,13 +81,13 @@ def chat(
 
 
 def chat_db(user_id, user_prompt, context = None):
-    # Add the user message to the database
-    fire_db.add_message(user_id, user_prompt)
-
     history = fire_db.retrieve_convo(user_id)
 
     # Chat with the model
     result, history = chat(user_prompt, context, history)
+
+    # Add the user message to the database
+    fire_db.add_message(user_id, user_prompt)
 
     # Add the bot message to the database
     fire_db.add_message(user_id, result, is_bot=True)

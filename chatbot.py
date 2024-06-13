@@ -1,11 +1,11 @@
 import torch
 import yaml
+import logging
 
 import utils.formation_dataset as formation_dataset
 import utils.fetch_parcoursup as fetch_parcoursup
 import utils.fire_db as fire_db
-import utils.log_config as log_config
-import vigogne
+import edubot
 
 # Config
 config = yaml.safe_load(open("config.yaml"))
@@ -14,7 +14,8 @@ prompt_path = config["directories"]["prompt"]
 prompt = open(prompt_path, "r").read()
 
 # Logging
-logger = log_config.setup_logging()
+logger = logging.getLogger(__name__)
+logger.setLevel(config["log_level"])
 
 
 def find_best_schools(user_id, sentence):
@@ -49,7 +50,7 @@ def find_best_schools(user_id, sentence):
             context += f" - {id_f} : {formation['description']}\n"
             id_f += 1
 
-        return vigogne.chat_db(user_id, input_text, context=context), formations
+        return edubot.chat_db(user_id, input_text, context=context), formations
     
 def get_school_info(user_id, input_text, url, description):
 
@@ -58,4 +59,4 @@ def get_school_info(user_id, input_text, url, description):
     if context is None:
         input_text = "Tu n'as pu trouver aucune information sur la formation. Peux-tu me donner plus de détails sur la formation avec ta base de connaissances ?"
     
-    return vigogne.chat_db(user_id, input_text, context=context)
+    return edubot.chat_db(user_id, input_text, context=context)

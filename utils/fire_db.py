@@ -44,12 +44,9 @@ def add_message(user_id, message, is_bot=False):
     logger.debug(f"Added message to user {user_id}: {message}")
 
 if __name__ == "__main__":
-    convo = retrieve_convo('jupQXBfzgcc5IJDEQOg8wV3xhml1')
+    convo = retrieve_convo('1234')
     for message in convo:
         print(message)
-
-    logger.info("test")
-    logger.debug("Adding test messages...")
 
     # add_message('jupQXBfzgcc5IJDEQOg8wV3xhml1', 'Python test')
     # add_message('jupQXBfzgcc5IJDEQOg8wV3xhml1', 'Python test 2', is_bot=True)

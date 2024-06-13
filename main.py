@@ -17,5 +17,5 @@ logger.info("Total GPU memory free is : " + str((torch.cuda.get_device_propertie
 if __name__ == "__main__":
     while True:
         user_input = input("User: ")
-        response = pipeline.educhat("jupQXBfzgcc5IJDEQOg8wV3xhml1", user_input)
+        response = pipeline.educhat("1234", user_input)
         print("Bot: " + response)

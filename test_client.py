@@ -28,7 +28,8 @@ def message(data):
         sio.disconnect()
     else:
         data = input("Votre message : ")
-        sio.emit("user_message", data)
+        user_message = {"user_id": "123", "message": data}
+        sio.emit("user_message", user_message)
 
 
 

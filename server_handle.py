@@ -4,11 +4,10 @@ import logging
 import yaml
 
 import pipeline
+#import vigogne
 
 server = Flask(__name__)
 server.config['SECRET_KEY'] = 'edubotkey'
-# no timeout
-server.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 socketio = SocketIO(server, cors_allowed_origins="*")
 
 # Logging
@@ -32,4 +31,5 @@ def disconnect(msg):
 def handle_message(msg):
 	logger.debug('User message: ' + msg['message'])
 	response = pipeline.educhat(msg['user_id'], msg['message'])
+	#response, _ = vigogne.chat(msg['message'])
 	socketio.emit('ai_message', response)
