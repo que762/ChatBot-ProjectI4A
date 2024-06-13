@@ -6,11 +6,7 @@ import gc
 import logging
 import yaml
 
-import concurrent.futures
-import asyncio
-executor = concurrent.futures.ThreadPoolExecutor()
-
-import utils.fire_db as fire_db
+from utils.mongo import retrieve_convo, insert_message
 
 # Define the model
 model_name_or_path = "bofenghuang/vigogne-2-7b-chat"
@@ -32,20 +28,23 @@ gc.collect()
 
 logger.info("Loading chatbot model...")
 bnb_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.float16)
-tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, revision=revision, padding_side="right", cache_dir=cache_dir)
-model = AutoModelForCausalLM.from_pretrained(model_name_or_path, revision=revision, torch_dtype=torch.float16, device_map="auto", cache_dir=cache_dir, quantization_config=bnb_config)
+tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, revision=revision, padding_side="right",
+                                          cache_dir=cache_dir)
+model = AutoModelForCausalLM.from_pretrained(model_name_or_path, revision=revision, torch_dtype=torch.float16,
+                                             device_map="auto", cache_dir=cache_dir, quantization_config=bnb_config)
 logger.info("Chatbot model loaded\n")
 
+
 def chat(
-    query: str,
-    context: Optional[str] = None,
-    history: Optional[List[Dict]] = None,
-    temperature: float = 0.3,
-    top_p: float = 1.0,
-    top_k: float = 0,
-    repetition_penalty: float = 1.1,
-    max_new_tokens: int = 1024,
-    **kwargs,
+        query: str,
+        context: Optional[str] = None,
+        history: Optional[List[Dict]] = None,
+        temperature: float = 0.3,
+        top_p: float = 1.0,
+        top_k: float = 0,
+        repetition_penalty: float = 1.1,
+        max_new_tokens: int = 1024,
+        **kwargs,
 ):
     if history is None:
         history = []
@@ -53,8 +52,6 @@ def chat(
     history.append({"role": "user", "content": query})
 
     input_text = get_chat_template(query, context, history[:-1])
-    print(input_text)
-    #print(history)
 
     logger.debug("Prompt: " + input_text)
 
@@ -84,29 +81,24 @@ def chat(
     return generated_text, history
 
 
-async def chat_db(user_id, user_prompt, context=None):
-    loop = asyncio.get_event_loop()
+def chat_db(user_id, user_prompt, context=None):
     try:
         # Retrieve conversation history
-        history = await loop.run_in_executor(executor, fire_db.retrieve_convo, user_id)
+        history = retrieve_convo(user_id)
 
         # Chat with the model
-        result, history = await loop.run_in_executor(executor, chat, user_prompt, context, history)
+        result, history = chat(user_prompt, context, history)
 
-        # Add the user message to the database
-        await loop.run_in_executor(executor, fire_db.add_message, user_id, user_prompt)
-
-        # Add the bot message to the database
-        await loop.run_in_executor(executor, fire_db.add_message, user_id, result, True)
+        # Add the user and bot messages to the database
+        insert_message(user_prompt, user_id, is_bot=False)
+        insert_message(result, user_id, is_bot=True)
 
         return result, history
     except Exception as e:
         logger.error(f"Error during chat_db operation: {e}")
-        return None, None
-    
 
 
-def get_chat_template(user_prompt, context, history):    
+def get_chat_template(user_prompt, context, history):
     with open(prompt_path, 'r') as f:
         default_system_prompt = f.read()
     return (f"{default_system_prompt}\n\n"
@@ -120,7 +112,6 @@ def get_chat_template(user_prompt, context, history):
 
 def handle_chat_history(history):
     return "\n".join([f"{x['role']} : {x['content']}" for x in history])
-
 
 
 if __name__ == "__main__":

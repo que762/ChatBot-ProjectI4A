@@ -26,9 +26,11 @@ def find_index_by_description(description, formations_dataset=formations_dataset
     """Find the index of a formation in the dataset by its description."""
     return formations_dataset[formations_dataset['description'] == description].index[0]
 
+
 def get_row_embedding(index):
     """Get the embedding of a row in the dataset."""
     return embeddings[index]
+
 
 def compare_to_each_row(sentence, embeddings=embeddings):
     """Compare a sentence to each sentence in the dataset and return the similarities."""
@@ -36,13 +38,15 @@ def compare_to_each_row(sentence, embeddings=embeddings):
     similarities = cosine_similarity([sentence_embedding], embeddings)
     return similarities
 
+
 def sort_by_most_similar(similarities, formations_dataset=formations_dataset):
     """Sort the dataset by the most similar formations."""
     # add the similarity column
     formations_dataset['similarity'] = similarities[0]
-    if max(similarities[0]) < 0.3: # if not similar enough
+    if max(similarities[0]) < 0.3:  # if not similar enough
         return None
     return formations_dataset.sort_values(by='similarity', ascending=False)
+
 
 if __name__ == "__main__":
     similarities = compare_to_each_row("CPGE Doubs")

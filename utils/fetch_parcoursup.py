@@ -2,8 +2,10 @@ import requests
 from bs4 import BeautifulSoup
 
 import logging
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
 
 def call_to_url(url):
     try:
@@ -18,8 +20,8 @@ def call_to_url(url):
 
     return response
 
+
 def fetch_parcourSup(url):
-    # Appel de la page web
     response = call_to_url(url)
 
     # Si la réponse est vide, on arrête l'exécution de la fonction
@@ -33,8 +35,6 @@ def fetch_parcourSup(url):
     if soup.find(string='Erreur 404!'):
         return None
 
-    #print(soup.prettify())
-
     # Liste des informations à récupérer
     formation_info = {}
 
@@ -44,7 +44,8 @@ def fetch_parcourSup(url):
     try:
         if presentation_section:
             # Extraction de tous les paragraphes situés dans la balise div de classe "word-break-break-word"
-            formation_info['presentation'] = presentation_section.find_next('div', class_='word-break-break-word').get_text()
+            formation_info['presentation'] = presentation_section.find_next('div',
+                                                                            class_='word-break-break-word').get_text()
     except AttributeError:
         pass
 
@@ -52,7 +53,6 @@ def fetch_parcourSup(url):
     frais_section = soup.find('h3', string="Frais de candidature")
     try:
         if frais_section:
-            #Récupére tous les texte de la balise div de classe "fr-callout fr-callout--blue-cumulus"
             formation_info['frais'] = frais_section.find_previous().get_text()
     except AttributeError:
         pass
@@ -61,7 +61,6 @@ def fetch_parcourSup(url):
     poursuite_section = soup.find('h3', string="Poursuite d'études")
     try:
         if poursuite_section:
-            #Extraction de tous les paragraphes situés dans la balise div de classe "word-break-break-word"
             formation_info['poursuite_etu'] = poursuite_section.find_previous().get_text()
     except AttributeError:
         pass
@@ -70,14 +69,11 @@ def fetch_parcourSup(url):
     debouche_section = soup.find('h3', string="Débouchés professionnels")
     try:
         if debouche_section:
-            #Extraction de tous les paragraphes situés dans la balise div de classe "word-break-break-word"
             formation_info['debouche'] = debouche_section.find_next('div', class_='word-break-break-word').get_text()
     except AttributeError:
         pass
 
     # Nettoyage des informations récupérées
-    # On retire tous les caractères spéciaux de la chaine de caractère (comme les espaces, les tabulations, les retours à la ligne, etc.)
-    # On vérifie également si la chain
     if 'presentation' in formation_info:
         formation_info['presentation'] = ' '.join(formation_info['presentation'].split())
     if 'frais' in formation_info:
@@ -88,6 +84,7 @@ def fetch_parcourSup(url):
         formation_info['debouche'] = ' '.join(formation_info['debouche'].split())
 
     return formation_info
+
 
 def convert_dict_to_str(formation_info):
     text = ""

@@ -3,42 +3,39 @@ import urllib3
 
 urllib3.disable_warnings()
 
-# Créer une instance du client Socket.IO
+# Create a Socket.IO client
 sio = socketio.Client(ssl_verify=False, reconnection=True)
 
-# Gestion des événements de connexion
+
+# Event handlers
 @sio.event
 def connect():
     sio.emit("connection", "Hello!")
-    print("Connecté au serveur")
+    print("Connected to the server")
 
 
-# Gestion des événements de déconnexion
 @sio.event
 def disconnect():
     sio.emit("disconnection", "Goodbye!")
-    print("Déconnecté du serveur")
+    print("Disconnected from the server")
 
-# Gestion des messages
+
+# Message handler
 @sio.on("ai_message")
 def message(data):
-    print("Réponse du serveur :", data)
+    print("Server Answer:", data)
     if data.lower() == "exit":
-        print("\nDéconnexion...")
+        print("\nDisconnection...")
         sio.disconnect()
     else:
-        data = input("Votre message : ")
+        data = input("Your msg : ")
         user_message = {"user_id": "123", "message": data}
         sio.emit("user_message", user_message)
 
 
-
 if __name__ == '__main__':
     try:
-        # Se connecter au serveur
         sio.connect('https://82.66.33.22:44444')
-        # Attendre les événements
         sio.wait()
     except KeyboardInterrupt:
-        # Se déconnecter du serveur
         sio.disconnect()
