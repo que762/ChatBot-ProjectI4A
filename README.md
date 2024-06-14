@@ -12,6 +12,6 @@ Ce repository contient le serveur et l'IA mise en place pour le projet de fin d'
 - edubot : contient le code permettant au chatbot de générer du texte et de gérer son historique.
 - pipeline : pipeline de notre projet, voir image ci-dessous.
 
-![pipeline](AI_diagram.png "Pipeline du projet")
+![pipeline](pipeline.png "Pipeline du projet")
 
 Le dossier `utils` contient tous les fichiers utiles permettant aux fichiers ci-dessus de s'exécuter, ainsi que le prompt donné à Vigogne.
