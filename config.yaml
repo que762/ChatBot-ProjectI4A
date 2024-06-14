@@ -5,6 +5,8 @@ directories:
   models: 'models'
   prompt: 'utils/prompt.txt'
 
-log_level: 'DEBUG'
+log_level: 'INFO'
 
 firebase_creds: 'utils/parcours-creds.json'
+
+history_length: 3

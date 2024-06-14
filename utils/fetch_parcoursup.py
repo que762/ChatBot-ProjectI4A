@@ -8,6 +8,10 @@ logger.setLevel(logging.INFO)
 
 
 def call_to_url(url):
+    """Get the content of a webpage.
+    :param url: The URL of the webpage.
+    :return: The response object."""
+
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -21,35 +25,39 @@ def call_to_url(url):
     return response
 
 
-def fetch_parcourSup(url):
+def fetch_parcoursup(url):
+    """Function to fetch information about a school from the Parcoursup website.
+    :param url: The URL of the school page.
+    :return: A dictionary containing the information about the school."""
+
+    # Get the content of the webpage
     response = call_to_url(url)
 
-    # Si la réponse est vide, on arrête l'exécution de la fonction
+    # If the response is empty, return None
     if not response:
         return None
 
-    # Parser le contenu HTML de la page web
+    # Parse the HTML content
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    # On test si la page web contient le texte "Erreur 404!". Si c'est le cas, on arrête l'exécution de la fonction
+    # If the page is a 404 error page, return None
     if soup.find(string='Erreur 404!'):
         return None
 
-    # Liste des informations à récupérer
+    # Fetch the information
     formation_info = {}
 
-    # Récupération des informations sur la formation
-    # On recherche la balise h3 qui contient "Présentation de la formation"
+    # Presentation section
     presentation_section = soup.find('h3', string='Présentation de la formation')
     try:
         if presentation_section:
-            # Extraction de tous les paragraphes situés dans la balise div de classe "word-break-break-word"
+            # Get the text of the next div with the class 'word-break-break-word'
             formation_info['presentation'] = presentation_section.find_next('div',
                                                                             class_='word-break-break-word').get_text()
     except AttributeError:
         pass
 
-    # Récupération des informations sur les frais de candidature et d'inscription
+    # Inscription section
     frais_section = soup.find('h3', string="Frais de candidature")
     try:
         if frais_section:
@@ -57,7 +65,7 @@ def fetch_parcourSup(url):
     except AttributeError:
         pass
 
-    # Récupération des informations sur les poursuites d'études
+    # Study continuation section
     poursuite_section = soup.find('h3', string="Poursuite d'études")
     try:
         if poursuite_section:
@@ -65,7 +73,7 @@ def fetch_parcourSup(url):
     except AttributeError:
         pass
 
-    # Récupération des informations sur les débouchés
+    # Professional opportunities section
     debouche_section = soup.find('h3', string="Débouchés professionnels")
     try:
         if debouche_section:
@@ -73,7 +81,7 @@ def fetch_parcourSup(url):
     except AttributeError:
         pass
 
-    # Nettoyage des informations récupérées
+    # Cleanup
     if 'presentation' in formation_info:
         formation_info['presentation'] = ' '.join(formation_info['presentation'].split())
     if 'frais' in formation_info:

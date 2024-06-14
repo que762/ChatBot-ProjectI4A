@@ -14,6 +14,7 @@ socketio = SocketIO(server, cors_allowed_origins="*")
 conf = yaml.safe_load(open("config.yaml"))
 logger = logging.getLogger(__name__)
 logger.setLevel(conf["log_level"])
+logging.basicConfig(level=conf["log_level"])
 
 
 @server.route('/')
@@ -24,6 +25,8 @@ def index():
 @socketio.on('connection')
 def connection(msg):
     socket_id = request.sid
+
+    # Send a welcome message
     socketio.emit('ai_message', 'Bonjour, je suis StudyMate, comment puis-je vous aider ?', to=socket_id)
 
 
@@ -35,10 +38,13 @@ def disconnect(msg):
 @socketio.on('user_message')
 def handle_message(msg):
     logger.debug('User message: ' + msg['message'])
+
+    # Get the user ID and message
     user_id = msg['user_id']
     user_message = msg['message']
     socket_id = request.sid
 
+    # Get the bot response
     response = pipeline.educhat(user_id, user_message)
 
     # Save the conversation
